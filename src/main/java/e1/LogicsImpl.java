@@ -1,48 +1,32 @@
 package e1;
 
-import java.util.*;
+import e1.board.*;
 
 public class LogicsImpl implements Logics {
 	
-	private final Pair<Integer,Integer> pawn;
-	private Pair<Integer,Integer> knight;
-	private final Random random = new Random();
-	private final int size;
+	private final Board board;
 	 
     public LogicsImpl(int size){
-    	this.size = size;
-        this.pawn = this.randomEmptyPosition();
-        this.knight = this.randomEmptyPosition();	
-    }
-    
-	private final Pair<Integer,Integer> randomEmptyPosition(){
-    	Pair<Integer,Integer> pos = new Pair<>(this.random.nextInt(size),this.random.nextInt(size));
-    	// the recursive call below prevents clash with an existing pawn
-    	return this.pawn!=null && this.pawn.equals(pos) ? randomEmptyPosition() : pos;
+    	this.board = BoardFactory.randomPositionedPieces(size);
     }
     
 	@Override
 	public boolean hit(int row, int col) {
-		if (row<0 || col<0 || row >= this.size || col >= this.size) {
-			throw new IndexOutOfBoundsException();
+		try {
+			this.board.moveKnightTo(new Pair<Integer,Integer>(row, col));
+		} catch (IllegalArgumentException e) {
+			return false;
 		}
-		// Below a compact way to express allowed moves for the knight
-		int x = row-this.knight.getX();
-		int y = col-this.knight.getY();
-		if (x!=0 && y!=0 && Math.abs(x)+Math.abs(y)==3) {
-			this.knight = new Pair<>(row,col);
-			return this.pawn.equals(this.knight);
-		}
-		return false;
+		return this.board.pawnPosition().equals(this.board.knightPosition());
 	}
 
 	@Override
 	public boolean hasKnight(int row, int col) {
-		return this.knight.equals(new Pair<>(row,col));
+		return this.board.knightPosition().getX() == row && this.board.knightPosition().getY() == col;
 	}
 
 	@Override
 	public boolean hasPawn(int row, int col) {
-		return this.pawn.equals(new Pair<>(row,col));
+		return this.board.pawnPosition().getX() == row && this.board.pawnPosition().getY() == col;
 	}
 }
